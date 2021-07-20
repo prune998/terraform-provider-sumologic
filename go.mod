@@ -19,6 +19,7 @@ require (
 	github.com/hashicorp/yamux v0.0.0-20190923154419-df201c70410d // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/nkanaev/numb v0.0.0-20210720123603-d8295fbde318 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
@@ -26,6 +27,8 @@ require (
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678 // indirect
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd // indirect
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	golang.org/x/tools v0.0.0-20200216192241-b320d3a0f5a2 // indirect
 	google.golang.org/api v0.17.0 // indirect
 	google.golang.org/genproto v0.0.0-20200210034751-acff78025515 // indirect

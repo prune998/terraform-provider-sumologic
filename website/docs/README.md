@@ -5,8 +5,9 @@
 #### Data Sources
   + [sumologic_caller_identity][10]
   + [sumologic_collector][11]
-  + [sumologic_personal_folder][12]
-  + [sumologic_role][13]
+  + [sumologic_global_folder][12]
+  + [sumologic_personal_folder][13]
+  + [sumologic_role][14]
 
 #### Resources
 ##### Sources
@@ -14,7 +15,7 @@
   + [sumologic_http_source][21]
   + [sumologic_polling_source][22]
   + [sumologic_cloudsyslog_source][23]
-  
+
 ##### Ingest Budgets
   + [sumologic_collector_ingest_budget_assignment][24]
   + [sumologic_ingest_budget][25]
@@ -22,7 +23,7 @@
 ##### User / Roles
   + [sumologic_role][30]
   + [sumologic_user][31]
-  
+
 ##### Content
   + [sumologic_scheduled_view][40]
   + [sumologic_partition][41]
@@ -49,18 +50,19 @@ The following properties are common to ALL sources and can be used to configure 
 - `use_autoline_matching` - (Optional) Type true to enable if you'd like message boundaries to be inferred automatically; type false to prevent message boundaries from being automatically inferred (equivalent to the Infer Boundaries option in the UI). The default setting is true.
 - `manual_prefix_regexp` - (Optional) When using useAutolineMatching=false, type a regular expression that matches the first line of the message to manually create the boundary. Note that any special characters in the regex, such as backslashes or double quotes, must be escaped.
 - `force_timezone` - (Optional) Type true to force the source to use a specific time zone, otherwise type false to use the time zone found in the logs. The default setting is false.
-- `default_date_formats` - (Optional) Define formats for the dates present in your log messages. You can specify a locator regex to identify where timestamps appear in log lines. 
-- `filters` - (Optional) If you'd like to add a filter to the source, type the name of the filter (Exclude, Include, Mask, Hash, or Forward. 
-- `cutoff_timestamp` - (Optional) Only collect data more recent than this timestamp, specified as milliseconds since epoch (13 digit). 
+- `default_date_formats` - (Optional) Define formats for the dates present in your log messages. You can specify a locator regex to identify where timestamps appear in log lines.
+- `filters` - (Optional) If you'd like to add a filter to the source, type the name of the filter (Exclude, Include, Mask, Hash, or Forward.
+- `cutoff_timestamp` - (Optional) Only collect data more recent than this timestamp, specified as milliseconds since epoch (13 digit).
 - `cutoff_relative_time` - (Optional) Can be specified instead of cutoffTimestamp to provide a relative offset with respect to the current time. Example: use -1h, -1d, or -1w to collect data that's less than one hour, one day, or one week old, respectively.
-- `fields` - (Optional) Map containing [key/value pairs][3]. 
+- `fields` - (Optional) Map containing [key/value pairs][3].
 
 [0]: index.html.markdown
 [2]: https://en.wikipedia.org/wiki/Tz_database
 [10]: d/caller_identity.html.markdown
 [11]: d/collector.html.markdown
-[12]: d/personal_folder.html.markdown
-[13]: d/role.html.markdown
+[12]: d/global_folder.html.markdown
+[13]: d/personal_folder.html.markdown
+[14]: d/role.html.markdown
 [20]: r/collector.html.markdown
 [21]: r/http_source.html.markdown
 [22]: r/polling_source.html.markdown

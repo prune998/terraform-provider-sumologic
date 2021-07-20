@@ -22,6 +22,3 @@ The following attributes are exported:
 - `id` - The ID of the Personal Folder.
 - `name` - The name of the Personal Folder.
 - `description` - The description of the Personal Folder.
-
-
-

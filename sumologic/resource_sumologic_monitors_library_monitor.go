@@ -82,6 +82,79 @@ func resourceSumologicMonitorsLibraryMonitor() *schema.Resource {
 				Computed: true,
 			},
 
+			"trigger_condition": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 2, // One for a missing data condition, another for trigger
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"static_condition": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: staticTriggerConditionSchema,
+							},
+							ConflictsWith: filterNot(allDataConditionFieldNames, staticConditionFieldName),
+						},
+						"logs_static_condition": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: logsStaticTriggerConditionSchema,
+							},
+							ConflictsWith: filterNot(allDataConditionFieldNames, staticConditionFieldName),
+						},
+						"metrics_static_condition": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: metricsStaticTriggerConditionSchema,
+							},
+							ConflictsWith: filterNot(allDataConditionFieldNames, metricsStaticConditionFieldName),
+						},
+						"logs_outlier_condition": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: logsOutlierTriggerConditionSchema,
+							},
+							ConflictsWith: filterNot(allDataConditionFieldNames, logsOutlierConditionFieldName),
+						},
+						"metrics_outlier_condition": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: metricsOutlierTriggerConditionSchema,
+							},
+							ConflictsWith: filterNot(allDataConditionFieldNames, metricsOutlierConditionFieldName),
+						},
+						"logs_missing_data_condition": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: logsMissingDataTriggerConditionSchema,
+							},
+							ConflictsWith: filterNot(allMissingDataConditionFieldNames, logsMissingDataConditionFieldName),
+						},
+						"metrics_missing_data_condition": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: metricsMissingDataTriggerConditionSchema,
+							},
+							ConflictsWith: filterNot(allMissingDataConditionFieldNames, metricsMissingDataConditionFieldName),
+						},
+					},
+				},
+			},
+
 			"triggers": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -674,6 +747,11 @@ func getTriggers(d *schema.ResourceData) []TriggerCondition {
 	return triggers
 }
 
+func triggerConditionBlockToJson(block map[string]interface{}) []TriggerCondition {
+	// TODO
+	return []TriggerCondition{}
+}
+
 func triggersBlockToTriggerCondition(triggerDict map[string]interface{}) TriggerCondition {
 	if v, ok := getSingletonArrayFieldOk(triggerDict, staticConditionFieldName); ok {
 		return staticConditionBlockToTriggerCondition(v)
@@ -817,6 +895,15 @@ var logsOutlierConditionFieldName = "logs_outlier_condition"
 var metricsOutlierConditionFieldName = "metrics_outlier_condition"
 var logsMissingDataConditionFieldName = "logs_missing_data_condition"
 var metricsMissingDataConditionFieldName = "metrics_missing_data_condition"
+var allConditionFieldNames = append(allDataConditionFieldNames, allMissingDataConditionFieldNames...)
+var allDataConditionFieldNames = []string{staticConditionFieldName,
+	logsStaticConditionFieldName,
+	metricsStaticConditionFieldName,
+	logsOutlierConditionFieldName,
+	metricsOutlierConditionFieldName,
+}
+var allMissingDataConditionFieldNames = []string{logsMissingDataConditionFieldName, metricsMissingDataConditionFieldName}
+
 var staticConditionDetectionMethod = "StaticCondition"
 var logsStaticConditionDetectionMethod = "LogsStaticCondition"
 var metricsStaticConditionDetectionMethod = "MetricsStaticCondition"
@@ -910,11 +997,6 @@ var staticConditionSchema = map[string]*schema.Schema{
 }
 
 var logsStaticConditionSchema = map[string]*schema.Schema{
-	"trigger_type": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: validation.StringInSlice([]string{"Critical", "Warning", "ResolvedCritical", "ResolvedWarning"}, false),
-	},
 	"threshold": {
 		Type:     schema.TypeFloat,
 		Required: true,
@@ -1045,6 +1127,253 @@ var metricsMissingDataConditionSchema = map[string]*schema.Schema{
 	},
 }
 
+var thresholdAndTypeResource = schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"threshold": {
+			Type:     schema.TypeFloat,
+			Optional: true,
+		},
+		"threshold_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringInSlice([]string{"LessThan", "LessThanOrEqual", "GreaterThan", "GreaterThanOrEqual"}, false),
+		},
+	},
+}
+
+var thresholdResource = schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"threshold": {
+			Type:     schema.TypeFloat,
+			Optional: true,
+		},
+	},
+}
+
+var alertAndResolutionThresholdWithTypeResource = schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"alert": {
+			Type:     schema.TypeList,
+			Required: true,
+			MaxItems: 1,
+			Elem:     &thresholdAndTypeResource,
+		},
+		"resolution": {
+			Type:     schema.TypeList,
+			Required: true,
+			MaxItems: 1,
+			Elem:     &thresholdAndTypeResource,
+		},
+	},
+}
+
+var alertAndResolutionThresholdResource = schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"alert": {
+			Type:     schema.TypeList,
+			Required: true,
+			MaxItems: 1,
+			Elem:     &thresholdResource,
+		},
+		"resolution": {
+			Type:     schema.TypeList,
+			Required: true,
+			MaxItems: 1,
+			Elem:     &thresholdResource,
+		},
+	},
+}
+
+var staticTriggerConditionSchema = map[string]*schema.Schema{
+	"field": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"time_range": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringInSlice([]string{"5m", "-5m", "10m", "-10m", "15m", "-15m", "30m", "-30m", "60m", "-60m", "1h", "-1h", "3h", "-3h", "6h", "-6h", "12h", "-12h", "24h", "-24h", "1d", "-1d"}, false),
+	},
+	"trigger_source": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ValidateFunc: validation.StringInSlice([]string{"AllTimeSeries", "AnyTimeSeries", "AllResults"}, false),
+	},
+	"occurrence_type": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringInSlice([]string{"AtLeastOnce", "Always", "ResultCount", "MissingData"}, false),
+	},
+	"critical": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem:     &alertAndResolutionThresholdWithTypeResource,
+	},
+	"warning": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem:     &alertAndResolutionThresholdWithTypeResource,
+	},
+}
+
+var logsStaticTriggerConditionSchema = map[string]*schema.Schema{
+	"field": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"time_range": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringInSlice([]string{"5m", "-5m", "10m", "-10m", "15m", "-15m", "30m", "-30m", "60m", "-60m", "1h", "-1h", "3h", "-3h", "6h", "-6h", "12h", "-12h", "24h", "-24h", "1d", "-1d"}, false),
+	},
+	"critical": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem:     &alertAndResolutionThresholdWithTypeResource,
+	},
+	"warning": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem:     &alertAndResolutionThresholdWithTypeResource,
+	},
+}
+
+var metricsStaticTriggerConditionSchema = map[string]*schema.Schema{
+	"time_range": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringInSlice([]string{"5m", "-5m", "10m", "-10m", "15m", "-15m", "30m", "-30m", "60m", "-60m", "1h", "-1h", "3h", "-3h", "6h", "-6h", "12h", "-12h", "24h", "-24h", "1d", "-1d"}, false),
+	},
+	"occurrence_type": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringInSlice([]string{"AtLeastOnce", "Always"}, false),
+	},
+	"critical": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem:     &alertAndResolutionThresholdWithTypeResource,
+	},
+	"warning": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem:     &alertAndResolutionThresholdWithTypeResource,
+	},
+}
+
+var logsOutlierTriggerConditionSchema = map[string]*schema.Schema{
+	"field": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"window": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntAtLeast(1),
+	},
+	"consecutive": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		ValidateFunc: validation.IntAtLeast(1),
+	},
+	"direction": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ValidateFunc: validation.StringInSlice([]string{"Both", "Up", "Down"}, false),
+	},
+	"critical": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"threshold": {
+					Type:     schema.TypeFloat,
+					Optional: true,
+				},
+			},
+		},
+	},
+	"warning": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"threshold": {
+					Type:     schema.TypeFloat,
+					Optional: true,
+				},
+			},
+		},
+	},
+}
+
+var metricsOutlierTriggerConditionSchema = map[string]*schema.Schema{
+	"baseline_window": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"direction": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ValidateFunc: validation.StringInSlice([]string{"Both", "Up", "Down"}, false),
+	},
+	"critical": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"threshold": {
+					Type:     schema.TypeFloat,
+					Optional: true,
+				},
+			},
+		},
+	},
+	"warning": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"threshold": {
+					Type:     schema.TypeFloat,
+					Optional: true,
+				},
+			},
+		},
+	},
+}
+
+var logsMissingDataTriggerConditionSchema = map[string]*schema.Schema{
+	"time_range": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringInSlice([]string{"5m", "-5m", "10m", "-10m", "15m", "-15m", "30m", "-30m", "60m", "-60m", "1h", "-1h", "3h", "-3h", "6h", "-6h", "12h", "-12h", "24h", "-24h", "1d", "-1d"}, false),
+	},
+}
+
+var metricsMissingDataTriggerConditionSchema = map[string]*schema.Schema{
+	"time_range": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringInSlice([]string{"5m", "-5m", "10m", "-10m", "15m", "-15m", "30m", "-30m", "60m", "-60m", "1h", "-1h", "3h", "-3h", "6h", "-6h", "12h", "-12h", "24h", "-24h", "1d", "-1d"}, false),
+	},
+	"trigger_source": {
+		Type:         schema.TypeString,
+		Required:     true,
+		ValidateFunc: validation.StringInSlice([]string{"AllTimeSeries", "AnyTimeSeries"}, false),
+	},
+}
+
 /*
    A 'triggers' block is legacy if each one of the following fields is unset or set to an empty map
    - static_condition
@@ -1078,4 +1407,14 @@ func isLegacyTriggersBlock(block map[string]interface{}) bool {
 		return false
 	}
 	return true
+}
+
+func filterNot(vs []string, v string) []string {
+	vsf := make([]string, 0)
+	for _, _v := range vs {
+		if _v != v {
+			vsf = append(vsf, _v)
+		}
+	}
+	return vsf
 }
